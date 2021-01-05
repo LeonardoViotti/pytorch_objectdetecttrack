@@ -1,3 +1,8 @@
+# TODO
+#   - Move video anotation to functions
+#   - Create centroid and trajectories annotation
+#   - Create trajectories torch
+
 #------------------------------------------------------------------------------
 # Settings
 
