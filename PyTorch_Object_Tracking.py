@@ -1,25 +1,28 @@
-#!/usr/bin/env python
-# coding: utf-8
+#------------------------------------------------------------------------------
+# Settings
 
-# In[ ]:
-
-
+# Load classes
 from models import *
 from utils import *
+from sort import *
 
+# Other libraraies
 import os, sys, time, datetime, random
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 
+import cv2
+from IPython.display import clear_output
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
 
 
-# In[ ]:
-
+#------------------------------------------------------------------------------
+# Filepaths and globals 
 
 config_path='config/yolov3.cfg'
 weights_path='config/yolov3.weights'
@@ -28,10 +31,15 @@ img_size=416
 conf_thres=0.8
 nms_thres=0.4
 
+# Set input file
+videopath = 'data/11-sample.mp4'
+
+#------------------------------------------------------------------------------
 # Load model and weights
+
 model = Darknet(config_path, img_size=img_size)
 model.load_weights(weights_path)
-model.cuda()
+# model.cuda()
 model.eval()
 classes = utils.load_classes(class_path)
 # Tensor = torch.cuda.FloatTensor
@@ -39,8 +47,8 @@ Tensor = torch.FloatTensor
 
 
 
-# In[ ]:
-
+#------------------------------------------------------------------------------
+# Functions
 
 def detect_image(img):
     # scale and pad image
@@ -62,24 +70,18 @@ def detect_image(img):
         detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
     return detections[0]
 
-
-# In[ ]:
-
-
-videopath = 'data/16-sample.mp4'
-
-# get_ipython().magic('pylab inline')
-import cv2
-from IPython.display import clear_output
+#------------------------------------------------------------------------------
+# Video settings
 
 cmap = plt.get_cmap('tab20b')
 colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]
 
-# initialize Sort object and video capture
-from sort import *
-vid = cv2.VideoCapture(videopath)
+# Initialize Sort object and video capture
 mot_tracker = Sort() 
+vid = cv2.VideoCapture(videopath)
 
+#------------------------------------------------------------------------------
+# Process video frame by frame
 #while(True):
 for ii in range(40):
     ret, frame = vid.read()
@@ -106,9 +108,14 @@ for ii in range(40):
             color = colors[int(obj_id) % len(colors)]
             color = [i * 255 for i in color]
             cls = classes[int(cls_pred)]
-            cv2.rectangle(frame, (x1, y1), (x1+box_w, y1+box_h), color, 4)
-            cv2.rectangle(frame, (x1, y1-35), (x1+len(cls)*19+60, y1), color, -1)
-            cv2.putText(frame, cls + "-" + str(int(obj_id)), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 3)
+            # Bounding box
+            cv2.rectangle(frame, (x1, y1), (x1+box_w, y1+box_h), color, 2)
+            # Class label rectangle
+            # cv2.rectangle(frame, (x1, y1-35), (x1+len(cls)*19+60, y1), color, -1)
+            cv2.rectangle(frame, (x1, y1-20), (x1+len(cls)*15+10, y1), color, -1)
+
+            # Class label text
+            cv2.putText(frame, cls + "-" + str(int(obj_id)), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, .4, (255,255,255), 1)
     # Show video
     cv2.imshow("Video", frame)
     # Break out by pressing 'q' when window is selected
