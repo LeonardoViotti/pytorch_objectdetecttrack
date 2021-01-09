@@ -50,13 +50,11 @@ classes = utils.load_classes(class_path)
 # Tensor = torch.cuda.FloatTensor
 Tensor = torch.FloatTensor
 
-
-
 #------------------------------------------------------------------------------
-# Functions
+# Detection function
 
-def detect_image(img):
-    # scale and pad image
+def detect_image(img, img_size = img_size):
+    # Scale and pad image
     ratio = min(img_size/img.size[0], img_size/img.size[1])
     imw = round(img.size[0] * ratio)
     imh = round(img.size[1] * ratio)
@@ -65,14 +63,21 @@ def detect_image(img):
                         (128,128,128)),
          transforms.ToTensor(),
          ])
-    # convert image to Tensor
+    # Convert image to Tensor
     image_tensor = img_transforms(img).float()
     image_tensor = image_tensor.unsqueeze_(0)
     input_img = Variable(image_tensor.type(Tensor))
-    # run inference on the model and get detections
+    
+    # Run inference on the model and get detections
     with torch.no_grad():
         detections = model(input_img)
         detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
+    
+    # Returns a Nx7 tensor, where N is the number of dectections in the imgage.
+    # Each detection contains 7 elements:
+    #   - 1-4 first elements are pixel coordinates
+    #   - 5-6 elements accuracy (??)
+    #   - 7 class
     return detections[0]
 
 #------------------------------------------------------------------------------
@@ -86,11 +91,24 @@ mot_tracker = Sort()
 vid = cv2.VideoCapture(videopath)
 
 #------------------------------------------------------------------------------
+# Video annotation functions
+
+# Draw bbox
+
+# Draw centroid
+
+# Draw trajctorie
+
+#------------------------------------------------------------------------------
 # Process video frame by frame
 #while(True):
 for ii in range(40):
+    
+    # Video frame
     ret, frame = vid.read()
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    
+    # Detections
     pilimg = Image.fromarray(frame)
     detections = detect_image(pilimg)
     
@@ -118,7 +136,7 @@ for ii in range(40):
             # Class label rectangle
             # cv2.rectangle(frame, (x1, y1-35), (x1+len(cls)*19+60, y1), color, -1)
             cv2.rectangle(frame, (x1, y1-20), (x1+len(cls)*15+10, y1), color, -1)
-
+            
             # Class label text
             cv2.putText(frame, cls + "-" + str(int(obj_id)), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, .4, (255,255,255), 1)
     # Show video
