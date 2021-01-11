@@ -1,8 +1,3 @@
-# TODO
-#   - Move video anotation to functions
-#   - Create centroid and trajectories annotation
-#   - Create trajectories torch
-
 #------------------------------------------------------------------------------
 # Settings
 
@@ -84,6 +79,25 @@ def detect_image(img, img_size = img_size):
 
 
 #------------------------------------------------------------------------------
+# Video settings
+
+cmap = plt.get_cmap('tab20b')
+colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]
+
+# Initialize Sort object and video capture
+mot_tracker = Sort() 
+vid = cv2.VideoCapture(videopath)
+
+# Get initial frame for testing
+ret, frame0 = vid.read()
+frame0 = cv2.cvtColor(frame0, cv2.COLOR_BGR2RGB)
+
+# Detections on initial frame
+pilimg0 = Image.fromarray(frame0)
+detections0 = detect_image(pilimg0)
+
+
+#------------------------------------------------------------------------------
 # Video annotation functions
 
 def detectionToPixel(
@@ -143,23 +157,7 @@ def drawBox(img,
 def drawPoint(img, detection):
     x1, y1, box_h, box_w, obj_id, cls_pred = detection
     cv2.circle(img, (x1,y1), 1, (255,0,255), 2)
-#------------------------------------------------------------------------------
-# Video settings
 
-cmap = plt.get_cmap('tab20b')
-colors = [cmap(i)[:3] for i in np.linspace(0, 1, 20)]
-
-# Initialize Sort object and video capture
-mot_tracker = Sort() 
-vid = cv2.VideoCapture(videopath)
-
-# Get initial frame for testing
-ret, frame0 = vid.read()
-frame0 = cv2.cvtColor(frameo, cv2.COLOR_BGR2RGB)
-
-# Detections on initial frame
-pilimg0 = Image.fromarray(frame0)
-detections0 = detect_image(pilimg0)
 
 #------------------------------------------------------------------------------
 # Process video frame by frame
